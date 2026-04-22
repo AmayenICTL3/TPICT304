@@ -3,7 +3,7 @@
   "info": {
     "title": "API bancaire JavaScript",
     "version": "1.0.0",
-    "description": "API REST simple en JavaScript pour gerer les comptes bancaires, les depots et les retraits."
+    "description": "## Systeme de transaction bancaire — Devoir 304\n\nAPI REST en JavaScript (Node.js) pour la gestion des comptes bancaires, des depots, des retraits et de l'historique des transactions.\n\n---\n\n## Fonctions du systeme\n\n| # | Fonction | Methode | URL |\n|---|----------|---------|-----|\n| 1 | Creer un compte | POST | `/accounts` |\n| 2 | Lister les comptes | GET | `/accounts` |\n| 3 | Consulter un compte | GET | `/accounts/{account_id}` |\n| 4 | Effectuer un depot | POST | `/accounts/{account_id}/deposit` |\n| 5 | Effectuer un retrait | POST | `/accounts/{account_id}/withdraw` |\n| + | Historique des transactions | GET | `/accounts/{account_id}/transactions` |\n\n---\n\n## Cas de test par fonction\n\n### Fonction 1 — Creer un compte (`POST /accounts`)\n\n| # | Description | Donnees envoyees | Resultat attendu | Code HTTP |\n|---|-------------|-----------------|-----------------|----------|\n| CT-01 | Creation valide avec solde initial | `full_name`, `phone_number`, `email`, `initial_balance: 10000` | Compte cree avec ID et numero de compte | 201 |\n| CT-02 | Creation valide sans email ni solde | `full_name`, `phone_number` seulement | Compte cree avec balance = 0 | 201 |\n| CT-03 | `full_name` absent | Corps sans `full_name` | Erreur : champ obligatoire | 400 |\n| CT-04 | `phone_number` absent | Corps sans `phone_number` | Erreur : champ obligatoire | 400 |\n| CT-05 | Solde initial negatif | `initial_balance: -500` | Erreur : solde negatif interdit | 400 |\n\n### Fonction 2 — Lister les comptes (`GET /accounts`)\n\n| # | Description | Precondition | Resultat attendu | Code HTTP |\n|---|-------------|-------------|-----------------|----------|\n| CT-06 | Liste vide au demarrage | Aucun compte cree | Tableau vide `[]` | 200 |\n| CT-07 | Liste avec comptes existants | Au moins un compte cree | Tableau de comptes | 200 |\n\n### Fonction 3 — Consulter un compte (`GET /accounts/{account_id}`)\n\n| # | Description | Precondition | Resultat attendu | Code HTTP |\n|---|-------------|-------------|-----------------|----------|\n| CT-08 | Compte existant | ID valide | Details + transactions | 200 |\n| CT-09 | Compte inexistant | ID invente | `Compte introuvable.` | 404 |\n\n### Fonction 4 — Effectuer un depot (`POST /accounts/{account_id}/deposit`)\n\n| # | Description | Donnees | Resultat attendu | Code HTTP |\n|---|-------------|---------|-----------------|----------|\n| CT-10 | Depot valide | `amount: 5000` | Solde augmente | 200 |\n| CT-11 | Depot avec description | `amount: 3000, description: \"Depot agence\"` | Libelle visible | 200 |\n| CT-12 | Montant nul | `amount: 0` | Erreur validation | 400 |\n| CT-13 | Montant negatif | `amount: -1000` | Erreur validation | 400 |\n| CT-14 | Compte inexistant | ID invente | `Compte introuvable.` | 404 |\n\n### Fonction 5 — Effectuer un retrait (`POST /accounts/{account_id}/withdraw`)\n\n| # | Description | Precondition | Donnees | Resultat attendu | Code HTTP |\n|---|-------------|-------------|---------|-----------------|----------|\n| CT-15 | Retrait valide | Solde >= montant | `amount: 2000` | Solde diminue | 200 |\n| CT-16 | Retrait egal au solde | Solde = montant | `amount: 10000` | Solde = 0 | 200 |\n| CT-17 | Solde insuffisant | Solde < montant | `amount: 50000` | `Solde insuffisant` | 400 |\n| CT-18 | Montant nul | Compte existant | `amount: 0` | Erreur validation | 400 |\n| CT-19 | Montant negatif | Compte existant | `amount: -500` | Erreur validation | 400 |\n| CT-20 | Compte inexistant | ID invente | `amount: 1000` | `Compte introuvable.` | 404 |\n\n---\n\n## Specifications fonctionnelles\n\n- Creation d'un compte avec nom complet, telephone, email (optionnel) et solde initial (optionnel)\n- Generation automatique d'un identifiant unique (UUID) et d'un numero de compte (format `ACC-AAAAMMJJ-XXXXXXXX`)\n- Donnees conservees en memoire pendant l'execution du serveur\n- Validation : solde initial >= 0, montants de transaction > 0\n- Refus du retrait si le solde est insuffisant\n- Enregistrement de chaque transaction avec date, type, montant et solde apres operation\n\n## Specifications non fonctionnelles\n\n- **Simplicite** : code lisible en Node.js pur sans framework\n- **Performance** : reponses rapides sans base de donnees distante\n- **Portabilite** : fonctionne avec Node.js sans dependances externes\n- **Maintenabilite** : code structure clairement dans un seul fichier\n- **Disponibilite** : API accessible tant que le serveur Node.js est actif"
   },
   "servers": [
     {
@@ -17,11 +17,11 @@
     },
     {
       "name": "Accounts",
-      "description": "Gestion des comptes"
+      "description": "Gestion des comptes bancaires"
     },
     {
       "name": "Transactions",
-      "description": "Operations bancaires"
+      "description": "Operations de depot et de retrait"
     }
   ],
   "paths": {
@@ -29,9 +29,18 @@
       "get": {
         "tags": ["General"],
         "summary": "Point d'entree de l'API",
+        "description": "Retourne un message de bienvenue et le lien vers la documentation Swagger.",
         "responses": {
           "200": {
-            "description": "Message de bienvenue"
+            "description": "Message de bienvenue",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Bienvenue sur l'API bancaire JavaScript",
+                  "documentation": "/docs"
+                }
+              }
+            }
           }
         }
       }
@@ -39,32 +48,114 @@
     "/accounts": {
       "get": {
         "tags": ["Accounts"],
-        "summary": "Lister les comptes",
+        "summary": "Lister tous les comptes",
+        "description": "Retourne la liste de tous les comptes bancaires enregistres en memoire.\n\n**Cas de test :**\n\n| # | Cas | Precondition | Reponse attendue |\n|---|-----|-------------|------------------|\n| CT-06 | Liste vide | Aucun compte cree | HTTP 200 — `[]` |\n| CT-07 | Comptes existants | Au moins un compte | HTTP 200 — tableau de comptes |\n\n**Test manuel :**\n1. Appeler avant de creer des comptes → verifier `[]`\n2. Creer un compte puis rappeler → verifier qu'il apparait",
         "responses": {
           "200": {
-            "description": "Liste des comptes"
+            "description": "Liste des comptes (sans les transactions)",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "a3f1b2c4-d5e6-7890-abcd-ef1234567890",
+                    "account_number": "ACC-20260422-A1B2C3D4",
+                    "full_name": "AMAYEN BOUSSIOM THIERRY MARTIN",
+                    "phone_number": "699001122",
+                    "email": "thierry@example.com",
+                    "balance": 10000,
+                    "created_at": "2026-04-22T10:00:00.000Z"
+                  }
+                ]
+              }
+            }
           }
         }
       },
       "post": {
         "tags": ["Accounts"],
-        "summary": "Creer un compte",
+        "summary": "Creer un compte bancaire",
+        "description": "Cree un nouveau compte bancaire. Un UUID et un numero de compte au format `ACC-AAAAMMJJ-XXXXXXXX` sont generes automatiquement.\n\n**Cas de test :**\n\n| # | Cas | Reponse attendue |\n|---|-----|------------------|\n| CT-01 | Tous les champs | HTTP 201 — compte cree |\n| CT-02 | Sans email ni solde | HTTP 201 — balance = 0 |\n| CT-03 | `full_name` absent | HTTP 400 — champ obligatoire |\n| CT-04 | `phone_number` absent | HTTP 400 — champ obligatoire |\n| CT-05 | Solde negatif | HTTP 400 — solde interdit |\n\n**Test manuel :** selectionner un exemple dans le menu deroulant **Examples** ci-dessous.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AccountCreate"
+              },
+              "examples": {
+                "CT-01 — Creation valide avec solde initial": {
+                  "summary": "CT-01 : Creation complete (cas nominal)",
+                  "description": "Tous les champs fournis. Resultat attendu : HTTP 201, compte cree avec ID et numero de compte generes.",
+                  "value": {
+                    "full_name": "AMAYEN BOUSSIOM THIERRY MARTIN",
+                    "phone_number": "699001122",
+                    "email": "thierry@example.com",
+                    "initial_balance": 10000
+                  }
+                },
+                "CT-02 — Creation minimale sans email ni solde": {
+                  "summary": "CT-02 : Champs obligatoires seulement (cas nominal)",
+                  "description": "Seuls full_name et phone_number fournis. Resultat attendu : HTTP 201, balance = 0.",
+                  "value": {
+                    "full_name": "NGUEMA CAROLE",
+                    "phone_number": "677445566"
+                  }
+                },
+                "CT-03 — full_name manquant (erreur)": {
+                  "summary": "CT-03 : full_name absent → 400",
+                  "description": "Champ obligatoire absent. Resultat attendu : HTTP 400.",
+                  "value": {
+                    "phone_number": "699001122",
+                    "initial_balance": 5000
+                  }
+                },
+                "CT-04 — phone_number manquant (erreur)": {
+                  "summary": "CT-04 : phone_number absent → 400",
+                  "description": "Champ obligatoire absent. Resultat attendu : HTTP 400.",
+                  "value": {
+                    "full_name": "AMAYEN BOUSSIOM THIERRY MARTIN",
+                    "initial_balance": 5000
+                  }
+                },
+                "CT-05 — Solde initial negatif (erreur)": {
+                  "summary": "CT-05 : Solde negatif → 400",
+                  "description": "Solde initial negatif interdit. Resultat attendu : HTTP 400.",
+                  "value": {
+                    "full_name": "TEST NEGATIF",
+                    "phone_number": "600000001",
+                    "initial_balance": -500
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Compte cree"
+            "description": "Compte cree avec succes",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "a3f1b2c4-d5e6-7890-abcd-ef1234567890",
+                  "account_number": "ACC-20260422-A1B2C3D4",
+                  "full_name": "AMAYEN BOUSSIOM THIERRY MARTIN",
+                  "phone_number": "699001122",
+                  "email": "thierry@example.com",
+                  "balance": 10000,
+                  "created_at": "2026-04-22T10:00:00.000Z"
+                }
+              }
+            }
           },
           "400": {
-            "description": "Donnees invalides"
+            "description": "Donnees invalides (champ manquant ou solde negatif)",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": "full_name et phone_number sont obligatoires."
+                }
+              }
+            }
           }
         }
       }
@@ -73,6 +164,7 @@
       "get": {
         "tags": ["Accounts"],
         "summary": "Consulter un compte",
+        "description": "Retourne les informations detaillees d'un compte, y compris l'historique complet de ses transactions.\n\n**Cas de test :**\n\n| # | Cas | Reponse attendue |\n|---|-----|------------------|\n| CT-08 | ID valide | HTTP 200 — details + transactions |\n| CT-09 | ID invente | HTTP 404 — Compte introuvable |\n\n**Test manuel :**\n1. Creer un compte et copier l'`id` retourne\n2. Coller cet `id` dans le champ `account_id` → verifier HTTP 200\n3. Tester avec `00000000-0000-0000-0000-000000000000` → verifier HTTP 404",
         "parameters": [
           {
             "name": "account_id",
@@ -80,15 +172,53 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Identifiant UUID du compte",
+            "example": "a3f1b2c4-d5e6-7890-abcd-ef1234567890"
           }
         ],
         "responses": {
           "200": {
-            "description": "Compte detaille"
+            "description": "Details du compte avec transactions",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "a3f1b2c4-d5e6-7890-abcd-ef1234567890",
+                  "account_number": "ACC-20260422-A1B2C3D4",
+                  "full_name": "AMAYEN BOUSSIOM THIERRY MARTIN",
+                  "phone_number": "699001122",
+                  "email": "thierry@example.com",
+                  "balance": 8000,
+                  "created_at": "2026-04-22T10:00:00.000Z",
+                  "transactions": [
+                    {
+                      "transaction_id": "f1e2d3c4-...",
+                      "transaction_type": "deposit",
+                      "amount": 10000,
+                      "description": "Solde initial",
+                      "balance_after": 10000,
+                      "created_at": "2026-04-22T10:00:00.000Z"
+                    },
+                    {
+                      "transaction_id": "b5a6c7d8-...",
+                      "transaction_type": "withdraw",
+                      "amount": 2000,
+                      "description": "Retrait client",
+                      "balance_after": 8000,
+                      "created_at": "2026-04-22T11:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "404": {
-            "description": "Compte introuvable"
+            "description": "Compte introuvable",
+            "content": {
+              "application/json": {
+                "example": { "detail": "Compte introuvable." }
+              }
+            }
           }
         }
       }
@@ -97,14 +227,15 @@
       "post": {
         "tags": ["Transactions"],
         "summary": "Effectuer un depot",
+        "description": "Ajoute un montant au solde du compte et enregistre la transaction. Le montant doit etre **strictement positif**.\n\n**Cas de test :**\n\n| # | Cas | Reponse attendue |\n|---|-----|------------------|\n| CT-10 | Depot valide | HTTP 200 — solde augmente |\n| CT-11 | Avec description | HTTP 200 — libelle visible |\n| CT-12 | Montant = 0 | HTTP 400 — montant invalide |\n| CT-13 | Montant negatif | HTTP 400 — montant invalide |\n| CT-14 | Compte inexistant | HTTP 404 — Compte introuvable |\n\n**Test manuel :** selectionner un exemple dans le menu **Examples**.",
         "parameters": [
           {
             "name": "account_id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" },
+            "description": "Identifiant UUID du compte",
+            "example": "a3f1b2c4-d5e6-7890-abcd-ef1234567890"
           }
         ],
         "requestBody": {
@@ -113,16 +244,68 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TransactionRequest"
+              },
+              "examples": {
+                "CT-10 — Depot valide": {
+                  "summary": "CT-10 : Depot valide (cas nominal)",
+                  "description": "Resultat attendu : HTTP 200, solde augmente de 5000.",
+                  "value": { "amount": 5000 }
+                },
+                "CT-11 — Depot avec description": {
+                  "summary": "CT-11 : Depot avec libelle (cas nominal)",
+                  "description": "Resultat attendu : HTTP 200, description visible dans la transaction.",
+                  "value": { "amount": 3000, "description": "Depot agence" }
+                },
+                "CT-12 — Montant nul (erreur)": {
+                  "summary": "CT-12 : Montant = 0 → 400",
+                  "description": "Resultat attendu : HTTP 400, montant doit etre strictement positif.",
+                  "value": { "amount": 0 }
+                },
+                "CT-13 — Montant negatif (erreur)": {
+                  "summary": "CT-13 : Montant negatif → 400",
+                  "description": "Resultat attendu : HTTP 400.",
+                  "value": { "amount": -1000 }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Depot effectue"
+            "description": "Depot effectue, compte mis a jour",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "a3f1b2c4-...",
+                  "balance": 15000,
+                  "transactions": [
+                    {
+                      "transaction_type": "deposit",
+                      "amount": 5000,
+                      "description": "Depot agence",
+                      "balance_after": 15000,
+                      "created_at": "2026-04-22T11:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Montant invalide",
+            "content": {
+              "application/json": {
+                "example": { "detail": "Le montant doit etre strictement positif." }
+              }
+            }
           },
           "404": {
-            "description": "Compte introuvable"
+            "description": "Compte introuvable",
+            "content": {
+              "application/json": {
+                "example": { "detail": "Compte introuvable." }
+              }
+            }
           }
         }
       }
@@ -131,14 +314,15 @@
       "post": {
         "tags": ["Transactions"],
         "summary": "Effectuer un retrait",
+        "description": "Retire un montant du solde si le solde est suffisant, et enregistre la transaction. Le montant doit etre **strictement positif** et ne peut pas depasser le solde disponible.\n\n**Cas de test :**\n\n| # | Cas | Reponse attendue |\n|---|-----|------------------|\n| CT-15 | Retrait valide | HTTP 200 — solde diminue |\n| CT-16 | Retrait egal au solde | HTTP 200 — solde = 0 |\n| CT-17 | Solde insuffisant | HTTP 400 — Solde insuffisant |\n| CT-18 | Montant = 0 | HTTP 400 — montant invalide |\n| CT-19 | Montant negatif | HTTP 400 — montant invalide |\n| CT-20 | Compte inexistant | HTTP 404 — Compte introuvable |\n\n**Test manuel :** selectionner un exemple dans le menu **Examples**.",
         "parameters": [
           {
             "name": "account_id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" },
+            "description": "Identifiant UUID du compte",
+            "example": "a3f1b2c4-d5e6-7890-abcd-ef1234567890"
           }
         ],
         "requestBody": {
@@ -147,19 +331,80 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TransactionRequest"
+              },
+              "examples": {
+                "CT-15 — Retrait valide": {
+                  "summary": "CT-15 : Retrait valide (cas nominal)",
+                  "description": "Precondition : solde >= 2000. Resultat attendu : HTTP 200, solde diminue.",
+                  "value": { "amount": 2000, "description": "Retrait client" }
+                },
+                "CT-16 — Retrait egal au solde": {
+                  "summary": "CT-16 : Vider le compte (cas nominal)",
+                  "description": "Precondition : solde = 10000. Resultat attendu : HTTP 200, solde = 0.",
+                  "value": { "amount": 10000, "description": "Retrait total" }
+                },
+                "CT-17 — Solde insuffisant (erreur)": {
+                  "summary": "CT-17 : Solde insuffisant → 400",
+                  "description": "Precondition : solde < 50000. Resultat attendu : HTTP 400.",
+                  "value": { "amount": 50000, "description": "Test solde insuffisant" }
+                },
+                "CT-18 — Montant nul (erreur)": {
+                  "summary": "CT-18 : Montant = 0 → 400",
+                  "description": "Resultat attendu : HTTP 400.",
+                  "value": { "amount": 0 }
+                },
+                "CT-19 — Montant negatif (erreur)": {
+                  "summary": "CT-19 : Montant negatif → 400",
+                  "description": "Resultat attendu : HTTP 400.",
+                  "value": { "amount": -500 }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Retrait effectue"
+            "description": "Retrait effectue, compte mis a jour",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "a3f1b2c4-...",
+                  "balance": 8000,
+                  "transactions": [
+                    {
+                      "transaction_type": "withdraw",
+                      "amount": 2000,
+                      "description": "Retrait client",
+                      "balance_after": 8000,
+                      "created_at": "2026-04-22T12:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "400": {
-            "description": "Solde insuffisant ou montant invalide"
+            "description": "Solde insuffisant ou montant invalide",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Solde insuffisant": {
+                    "value": { "detail": "Solde insuffisant pour effectuer ce retrait." }
+                  },
+                  "Montant invalide": {
+                    "value": { "detail": "Le montant doit etre strictement positif." }
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "Compte introuvable"
+            "description": "Compte introuvable",
+            "content": {
+              "application/json": {
+                "example": { "detail": "Compte introuvable." }
+              }
+            }
           }
         }
       }
@@ -167,23 +412,51 @@
     "/accounts/{account_id}/transactions": {
       "get": {
         "tags": ["Transactions"],
-        "summary": "Lister les transactions",
+        "summary": "Historique des transactions",
+        "description": "Retourne toutes les transactions associees a un compte bancaire dans l'ordre chronologique.\n\n**Cas de test :**\n\n| # | Cas | Reponse attendue |\n|---|-----|------------------|\n| CT-21 | Compte sans operation | HTTP 200 — `[]` |\n| CT-22 | Avec operations | HTTP 200 — liste chronologique |\n| CT-23 | Compte inexistant | HTTP 404 — Compte introuvable |\n\n**Test manuel :**\n1. Creer un compte avec solde = 0 → consulter → verifier `[]`\n2. Effectuer un depot et un retrait → verifier que les 2 transactions apparaissent",
         "parameters": [
           {
             "name": "account_id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" },
+            "description": "Identifiant UUID du compte",
+            "example": "a3f1b2c4-d5e6-7890-abcd-ef1234567890"
           }
         ],
         "responses": {
           "200": {
-            "description": "Historique des transactions"
+            "description": "Historique des transactions",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "transaction_id": "f1e2d3c4-...",
+                    "transaction_type": "deposit",
+                    "amount": 10000,
+                    "description": "Solde initial",
+                    "balance_after": 10000,
+                    "created_at": "2026-04-22T10:00:00.000Z"
+                  },
+                  {
+                    "transaction_id": "b5a6c7d8-...",
+                    "transaction_type": "withdraw",
+                    "amount": 2000,
+                    "description": "Retrait client",
+                    "balance_after": 8000,
+                    "created_at": "2026-04-22T11:00:00.000Z"
+                  }
+                ]
+              }
+            }
           },
           "404": {
-            "description": "Compte introuvable"
+            "description": "Compte introuvable",
+            "content": {
+              "application/json": {
+                "example": { "detail": "Compte introuvable." }
+              }
+            }
           }
         }
       }
@@ -197,19 +470,23 @@
         "properties": {
           "full_name": {
             "type": "string",
-            "example": "KOA ESSAMA PAULIN BRICE"
+            "description": "Nom complet du titulaire du compte.",
+            "example": "AMAYEN BOUSSIOM THIERRY MARTIN"
           },
           "phone_number": {
             "type": "string",
+            "description": "Numero de telephone du client.",
             "example": "699001122"
           },
           "email": {
             "type": "string",
             "nullable": true,
-            "example": "paulin@example.com"
+            "description": "Adresse email du client (optionnel).",
+            "example": "thierry@example.com"
           },
           "initial_balance": {
             "type": "number",
+            "description": "Solde initial du compte. Doit etre superieur ou egal a zero.",
             "example": 10000
           }
         }
@@ -220,13 +497,44 @@
         "properties": {
           "amount": {
             "type": "number",
+            "description": "Montant de l'operation. Doit etre strictement positif.",
             "example": 5000
           },
           "description": {
             "type": "string",
             "nullable": true,
+            "description": "Libelle ou motif de la transaction.",
             "example": "Depot agence"
           }
+        }
+      },
+      "AccountSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Identifiant unique du compte (UUID)." },
+          "account_number": { "type": "string", "description": "Numero de compte au format ACC-AAAAMMJJ-XXXXXXXX." },
+          "full_name": { "type": "string", "description": "Nom complet du titulaire." },
+          "phone_number": { "type": "string", "description": "Numero de telephone." },
+          "email": { "type": "string", "nullable": true, "description": "Adresse email." },
+          "balance": { "type": "number", "description": "Solde courant du compte." },
+          "created_at": { "type": "string", "description": "Date de creation au format ISO 8601." }
+        }
+      },
+      "TransactionRecord": {
+        "type": "object",
+        "properties": {
+          "transaction_id": { "type": "string", "description": "Identifiant unique de la transaction." },
+          "transaction_type": { "type": "string", "enum": ["deposit", "withdraw"], "description": "Type de transaction." },
+          "amount": { "type": "number", "description": "Montant de la transaction." },
+          "description": { "type": "string", "nullable": true, "description": "Description de la transaction." },
+          "balance_after": { "type": "number", "description": "Solde apres l'operation." },
+          "created_at": { "type": "string", "description": "Date de la transaction au format ISO 8601." }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": "string", "description": "Message d'erreur retourne par l'API." }
         }
       }
     }

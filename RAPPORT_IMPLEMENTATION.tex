@@ -1,0 +1,913 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{amsmath}
+
+% ---- Couleurs ----
+\definecolor{primary}{RGB}{26, 86, 219}
+\definecolor{secondary}{RGB}{30, 64, 175}
+\definecolor{success}{RGB}{5, 150, 105}
+\definecolor{danger}{RGB}{220, 38, 38}
+\definecolor{codebg}{RGB}{245, 247, 250}
+\definecolor{codeborder}{RGB}{203, 213, 225}
+\definecolor{codecomment}{RGB}{107, 114, 128}
+\definecolor{codestring}{RGB}{5, 150, 105}
+\definecolor{codekeyword}{RGB}{99, 102, 241}
+\definecolor{lightblue}{RGB}{239, 246, 255}
+\definecolor{lightgreen}{RGB}{236, 253, 245}
+\definecolor{lightred}{RGB}{254, 242, 242}
+\definecolor{jsorange}{RGB}{180, 83, 9}
+
+% ---- Style JavaScript ----
+\lstdefinelanguage{JavaScript}{
+  keywords={const, let, var, function, return, if, else, new, true, false, null, require, module, exports, async, await, try, catch, throw},
+  keywordstyle=\color{codekeyword}\bfseries,
+  ndkeywords={Number, String, Boolean, Array, Object, Promise, Date, Math, JSON, Buffer},
+  ndkeywordstyle=\color{jsorange}\bfseries,
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestring},
+  morestring=[b]',
+  morestring=[b]",
+  morestring=[b]`,
+}
+
+\lstdefinestyle{js}{
+  language=JavaScript,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize,
+  numbers=left,
+  stepnumber=1,
+  numberstyle=\tiny\color{codecomment},
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{codeborder},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=2,
+  showstringspaces=false,
+  xleftmargin=15pt,
+  xrightmargin=5pt,
+  captionpos=b,
+}
+
+\lstdefinestyle{json}{
+  language=,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize,
+  stringstyle=\color{codestring},
+  frame=single,
+  rulecolor=\color{codeborder},
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false,
+  xleftmargin=15pt,
+  captionpos=b,
+}
+
+\lstdefinestyle{bash}{
+  language=bash,
+  basicstyle=\ttfamily\footnotesize\color{white},
+  backgroundcolor=\color[RGB]{30,41,59},
+  keywordstyle=\color[RGB]{129,230,217},
+  stringstyle=\color[RGB]{167,243,208},
+  commentstyle=\color[RGB]{107,114,128}\itshape,
+  frame=single,
+  rulecolor=\color[RGB]{51,65,85},
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false,
+  xleftmargin=15pt,
+  captionpos=b,
+}
+
+% ---- En-tete et pied de page ----
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{primary}{\textbf{Devoir 304 --- API bancaire JavaScript}}}
+\fancyhead[R]{\small\textcolor{codecomment}{AMAYEN BOUSSIOM THIERRY MARTIN}}
+\fancyfoot[C]{\small\textcolor{codecomment}{\thepage}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+% ---- Titres ----
+\titleformat{\section}{\Large\bfseries\color{primary}}{}{0em}{\thesection\quad}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{secondary}}{}{0em}{\thesubsection\quad}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{secondary}}{}{0em}{\thesubsubsection\quad}
+
+% ---- Boites colorees ----
+\newmdenv[backgroundcolor=lightblue,linecolor=primary,linewidth=2pt,
+  leftline=true,rightline=false,topline=false,bottomline=false,
+  innerleftmargin=10pt,innerrightmargin=10pt,innertopmargin=8pt,innerbottommargin=8pt]{infobox}
+
+\newmdenv[backgroundcolor=lightgreen,linecolor=success,linewidth=2pt,
+  leftline=true,rightline=false,topline=false,bottomline=false,
+  innerleftmargin=10pt,innerrightmargin=10pt,innertopmargin=8pt,innerbottommargin=8pt]{successbox}
+
+\newmdenv[backgroundcolor=lightred,linecolor=danger,linewidth=2pt,
+  leftline=true,rightline=false,topline=false,bottomline=false,
+  innerleftmargin=10pt,innerrightmargin=10pt,innertopmargin=8pt,innerbottommargin=8pt]{dangerbox}
+
+\hypersetup{colorlinks=true,linkcolor=primary,urlcolor=primary,
+  pdftitle={Rapport Implementation - API Bancaire JavaScript},
+  pdfauthor={AMAYEN BOUSSIOM THIERRY MARTIN}}
+
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+% =========================================================
+\begin{document}
+% =========================================================
+
+% ---- Page de garde ----
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+{\Large\bfseries UNIVERSITE DE YAOUNDE I\\[0.3cm]}
+{\large Faculte des Sciences\\[0.1cm]}
+{\large Departement d'Informatique\\[2cm]}
+
+\noindent\rule{\linewidth}{2pt}\\[0.5cm]
+{\Huge\bfseries\color{primary} Rapport d'Implementation}\\[0.3cm]
+{\LARGE\bfseries API de Transaction Bancaire}\\[0.3cm]
+{\large Devoir 304 --- Conception d'API REST en JavaScript}\\[0.3cm]
+\noindent\rule{\linewidth}{2pt}\\[2cm]
+
+\begin{tabular}{ll}
+\textbf{Etudiant :} & AMAYEN BOUSSIOM THIERRY MARTIN \\[0.3cm]
+\textbf{Matricule :} & 25I2177 \\[0.3cm]
+\textbf{Niveau :} & Licence 3 ICT \\[0.3cm]
+\textbf{Etablissement :} & Universite de Yaounde I \\[0.3cm]
+\textbf{Depot GitHub :} & \url{https://github.com/AmayenICTL3/TPICT304} \\[0.3cm]
+\textbf{Date :} & Avril 2026 \\
+\end{tabular}
+
+\vfill
+{\large\textit{<<~Conception et implementation d'une API REST en JavaScript\\
+pour la gestion de comptes bancaires et de transactions.~>>}}
+\end{titlepage}
+
+% ---- Table des matieres ----
+\tableofcontents
+\newpage
+
+% =========================================================
+\section{Introduction et contexte}
+% =========================================================
+
+\subsection{Contexte du projet}
+
+Ce rapport decrit de facon complete l'implementation d'une \textbf{API REST de transaction bancaire en JavaScript} realisee dans le cadre du Devoir 304 de Licence 3 ICT.
+
+L'API permet a des clients de gerer leurs comptes bancaires : creer un compte, consulter son solde, effectuer des depots et des retraits, et visualiser l'historique de leurs operations.
+
+\subsection{Probleme resolu}
+
+Les etablissements financiers ont besoin de solutions numeriques pour automatiser la gestion des operations bancaires. Cette API constitue le back-end d'un tel systeme, consommable par une application web, mobile ou desktop.
+
+\subsection{Choix technologiques}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Composant} & \textbf{Technologie} & \textbf{Raison du choix} \\
+\midrule
+Langage & JavaScript (Node.js) & Ubiquite, asynchrone natif, ecosystem NPM \\
+Serveur HTTP & Module natif \texttt{http} & Aucune dependance externe, pedagogique \\
+Documentation & Swagger UI (OpenAPI 3.0) & Standard industriel, interface interactive \\
+Persistance & Memoire vive (tableau) & Simple, sans configuration, adapte au devoir \\
+Identifiants & Module natif \texttt{crypto} & UUID v4 generes sans bibliotheque externe \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{infobox}
+\textbf{Pourquoi JavaScript pur sans framework ?} L'objectif pedagogique est de comprendre le fonctionnement d'un serveur HTTP de l'interieur, sans la magie d'un framework comme Express ou Fastify. Le module \texttt{http} de Node.js est utilise directement.
+\end{infobox}
+
+% =========================================================
+\section{Architecture du projet}
+% =========================================================
+
+\subsection{Structure des fichiers}
+
+\begin{lstlisting}[style=bash, caption={Arborescence du projet}]
+TPICT304/
+|
+|-- server.js              # Serveur HTTP : toute la logique de l'API
+|-- openapi.json           # Specification OpenAPI 3.0 (Swagger)
+|-- package.json           # Metadonnees Node.js
+|-- CAHIER_DE_CHARGES.md   # Cahier des charges
+|-- CAHIER_DE_CHARGES.pdf  # Version PDF du cahier des charges
+|
+|-- public/
+    |-- swagger-ui/
+        |-- swagger-ui-bundle.js  # Interface Swagger UI
+        |-- swagger-ui.css
+        |-- favicon.svg
+\end{lstlisting}
+
+\subsection{Architecture de server.js}
+
+Contrairement a un projet Python multi-fichiers, toute la logique est contenue dans \textbf{un seul fichier} \texttt{server.js}. Il est organise en blocs fonctionnels distincts :
+
+\begin{center}
+\begin{tabular}{clp{8cm}}
+\toprule
+\textbf{Bloc} & \textbf{Contenu} & \textbf{Role} \\
+\midrule
+1 & Utilitaires & \texttt{json()}, \texttt{sendFile()}, \texttt{readJsonBody()}, \texttt{round()} \\
+2 & Logique metier & \texttt{generateAccountNumber()}, \texttt{accountSummary()}, \texttt{findAccount()} \\
+3 & Interface Swagger & \texttt{docsHtml()} \\
+4 & Routeur HTTP & \texttt{http.createServer()} avec gestion de toutes les routes \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =========================================================
+\section{Specifications fonctionnelles}
+% =========================================================
+
+\subsection{Acteurs du systeme}
+
+\textbf{Client bancaire} : l'utilisateur principal. Il peut :
+\begin{itemize}[noitemsep]
+  \item ouvrir un compte bancaire
+  \item consulter les informations de son compte
+  \item effectuer des depots et des retraits
+  \item consulter l'historique de ses transactions
+\end{itemize}
+
+\textbf{Administrateur systeme} : supervise le systeme. Il peut :
+\begin{itemize}[noitemsep]
+  \item consulter la liste complete des comptes
+  \item suivre les transactions
+\end{itemize}
+
+\subsection{Les 5 fonctions du systeme}
+
+\begin{center}
+\begin{tabular}{clll}
+\toprule
+\textbf{\#} & \textbf{Fonction} & \textbf{Methode HTTP} & \textbf{URL} \\
+\midrule
+F1 & Creer un compte & POST & \texttt{/accounts} \\
+F2 & Lister les comptes & GET & \texttt{/accounts} \\
+F3 & Consulter un compte & GET & \texttt{/accounts/\{id\}} \\
+F4 & Effectuer un depot & POST & \texttt{/accounts/\{id\}/deposit} \\
+F5 & Effectuer un retrait & POST & \texttt{/accounts/\{id\}/withdraw} \\
+F+ & Historique des transactions & GET & \texttt{/accounts/\{id\}/transactions} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Regles de gestion}
+
+\begin{enumerate}[noitemsep]
+  \item Chaque compte possede un identifiant unique (UUID)
+  \item Chaque compte possede un numero unique au format \texttt{ACC-AAAAMMJJ-XXXXXXXX}
+  \item Le solde initial doit etre superieur ou egal a zero
+  \item Un depot doit avoir un montant strictement positif
+  \item Un retrait doit avoir un montant strictement positif
+  \item Un retrait est refuse si le solde est insuffisant
+  \item Chaque transaction modifie immediatement le solde
+  \item Chaque transaction est conservee dans l'historique du compte
+\end{enumerate}
+
+% =========================================================
+\section{Specifications non fonctionnelles}
+% =========================================================
+
+\begin{center}
+\begin{tabular}{lp{5cm}p{6cm}}
+\toprule
+\textbf{Critere} & \textbf{Exigence} & \textbf{Comment c'est respecte} \\
+\midrule
+Simplicite & Code lisible et pedagogique & Un seul fichier, fonctions courtes et bien nommees \\
+Performance & Reponses rapides & Donnees en memoire, pas d'I/O disque \\
+Fiabilite & Donnees correctes en execution & Tableau JavaScript synchronise, pas de race condition \\
+Portabilite & Fonctionne sans dependances & Module \texttt{http} natif, seul \texttt{crypto} utilise \\
+Maintenabilite & Code structure clairement & Blocs distincts : utilitaires, metier, routeur \\
+Disponibilite & API accessible & Fonctionne tant que le processus Node.js est actif \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =========================================================
+\section{Implementation detaillee --- server.js}
+% =========================================================
+
+\subsection{Initialisation et configuration}
+
+\begin{lstlisting}[style=js, caption={server.js --- Imports et configuration}]
+const http = require("http");       // serveur HTTP natif
+const fs = require("fs");           // lecture de fichiers (Swagger)
+const path = require("path");       // gestion des chemins
+const { randomUUID } = require("crypto");  // generation UUID v4
+
+const HOST = "0.0.0.0";            // ecoute sur toutes les interfaces
+const PORT = Number(process.env.PORT || process.argv[2] || 8003);
+// PORT : variable d'environnement > argument CLI > defaut 8003
+
+const accounts = [];   // tableau en memoire : stocke tous les comptes
+\end{lstlisting}
+
+\begin{infobox}
+\textbf{Persistance en memoire :} Les donnees sont stockees dans le tableau \texttt{accounts} pendant l'execution du serveur. Elles sont perdues a l'arret. C'est un choix delibere pour ce devoir academique (pas de base de donnees requise).
+\end{infobox}
+
+\subsection{Fonctions utilitaires}
+
+\subsubsection{Envoyer une reponse JSON}
+
+\begin{lstlisting}[style=js, caption={server.js --- Fonction json()}]
+function json(response, statusCode, payload) {
+  const body = JSON.stringify(payload);   // serialise l'objet en chaine JSON
+  response.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(body),  // taille en octets
+  });
+  response.end(body);  // envoie la reponse et ferme la connexion
+}
+\end{lstlisting}
+
+Cette fonction est appelee partout dans le routeur pour retourner des reponses JSON avec le bon code HTTP et les bons en-tetes.
+
+\subsubsection{Lire le corps JSON d'une requete}
+
+\begin{lstlisting}[style=js, caption={server.js --- Fonction readJsonBody()}]
+function readJsonBody(request) {
+  return new Promise((resolve, reject) => {
+    let raw = "";
+
+    // Node.js recoit le corps en morceaux (chunks) de facon asynchrone
+    request.on("data", (chunk) => {
+      raw += chunk;   // concatene les morceaux
+    });
+
+    request.on("end", () => {
+      if (!raw) {
+        resolve({});   // corps vide -> objet vide
+        return;
+      }
+      try {
+        resolve(JSON.parse(raw));   // parse le JSON
+      } catch (error) {
+        reject(error);   // JSON invalide -> erreur
+      }
+    });
+
+    request.on("error", reject);
+  });
+}
+\end{lstlisting}
+
+\begin{infobox}
+\textbf{Pourquoi une Promise ?} HTTP en Node.js est asynchrone par nature : le corps d'une requete arrive en morceaux successifs. La Promise permet d'attendre que tous les morceaux soient recus avant de parser le JSON, en utilisant \texttt{await}.
+\end{infobox}
+
+\subsubsection{Fonctions metier}
+
+\begin{lstlisting}[style=js, caption={server.js --- Fonctions metier}]
+function round(value) {
+  // Arrondit a 2 decimales pour eviter les erreurs flottantes
+  // ex: 0.1 + 0.2 = 0.30000000000000004 en JS
+  return Math.round(Number(value) * 100) / 100;
+}
+
+function generateAccountNumber() {
+  // Genere: ACC-20260422-A1B2C3D4
+  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const randomPart = randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+  return `ACC-${datePart}-${randomPart}`;
+}
+
+function accountSummary(account) {
+  // Retourne le compte SANS les transactions (pour GET /accounts)
+  return {
+    id: account.id,
+    account_number: account.account_number,
+    full_name: account.full_name,
+    phone_number: account.phone_number,
+    email: account.email,
+    balance: account.balance,
+    created_at: account.created_at,
+  };
+}
+
+function accountDetails(account) {
+  // Retourne le compte AVEC les transactions (pour GET /accounts/:id)
+  return {
+    ...accountSummary(account),   // spread: copie tous les champs du resume
+    transactions: account.transactions,
+  };
+}
+
+function findAccount(accountId) {
+  // Cherche un compte par son UUID dans le tableau en memoire
+  return accounts.find((account) => account.id === accountId);
+  // Retourne undefined si non trouve
+}
+\end{lstlisting}
+
+\subsection{Le routeur HTTP}
+
+Le serveur utilise un unique gestionnaire de requetes qui analyse la methode HTTP et le chemin URL pour dispatcher vers la bonne logique.
+
+\begin{lstlisting}[style=js, caption={server.js --- Squelette du routeur}]
+const server = http.createServer(async (request, response) => {
+  const url = new URL(request.url, `http://${HOST}:${PORT}`);
+  const pathname = url.pathname;
+  // request.method = "GET", "POST", etc.
+  // pathname = "/accounts", "/accounts/uuid", etc.
+
+  // === Routes statiques ===
+  if (request.method === "GET" && pathname === "/") { ... }
+  if (request.method === "GET" && pathname === "/docs") { ... }
+  if (request.method === "GET" && pathname === "/openapi.json") { ... }
+  if (request.method === "GET" && pathname.startsWith("/public/")) { ... }
+
+  // === Routes dynamiques /accounts ===
+  if (pathname === "/accounts" && request.method === "GET") { ... }
+  if (pathname === "/accounts" && request.method === "POST") { ... }
+
+  // === Routes avec parametre /accounts/:id ===
+  const accountMatch = pathname.match(/^\/accounts\/([^/]+)$/);
+  // accountMatch[1] = l'UUID extrait de l'URL
+
+  // === Routes avec action /accounts/:id/(deposit|withdraw|transactions) ===
+  const txMatch = pathname.match(/^\/accounts\/([^/]+)\/(deposit|withdraw|transactions)$/);
+  // txMatch[1] = UUID, txMatch[2] = "deposit" ou "withdraw" ou "transactions"
+});
+\end{lstlisting}
+
+\begin{infobox}
+\textbf{Expressions regulieres pour le routage :} En l'absence de framework, les routes dynamiques sont identifiees par des expressions regulieres. Le groupe de capture \texttt{([{\char`\^}/]+)} extrait l'UUID, et \texttt{(deposit|withdraw|transactions)} identifie l'action.
+\end{infobox}
+
+\subsection{Fonction 1 --- Creer un compte (POST /accounts)}
+
+\begin{lstlisting}[style=js, caption={server.js --- POST /accounts}]
+if (pathname === "/accounts" && request.method === "POST") {
+  try {
+    const payload = await readJsonBody(request);  // lit le corps JSON
+
+    // Validation 1 : champs obligatoires
+    if (!payload.full_name || !payload.phone_number) {
+      json(response, 400, { detail: "full_name et phone_number sont obligatoires." });
+      return;
+    }
+
+    // Validation 2 : solde initial non negatif
+    const initialBalance = round(payload.initial_balance || 0);
+    if (initialBalance < 0) {
+      json(response, 400, { detail: "Le solde initial doit etre positif ou nul." });
+      return;
+    }
+
+    // Construction de l'objet compte
+    const account = {
+      id: randomUUID(),                    // UUID v4 unique
+      account_number: generateAccountNumber(),
+      full_name: payload.full_name,
+      phone_number: payload.phone_number,
+      email: payload.email || null,        // null si absent
+      balance: initialBalance,
+      created_at: new Date().toISOString(),
+      transactions: [],                    // tableau vide au depart
+    };
+
+    // Si solde initial > 0, on cree une transaction "depot initial"
+    if (initialBalance > 0) {
+      account.transactions.push({
+        transaction_id: randomUUID(),
+        transaction_type: "deposit",
+        amount: initialBalance,
+        description: "Solde initial",
+        balance_after: initialBalance,
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    accounts.push(account);               // ajoute au tableau memoire
+    json(response, 201, accountSummary(account));  // HTTP 201 Created
+  } catch {
+    json(response, 400, { detail: "Corps JSON invalide." });
+  }
+  return;
+}
+\end{lstlisting}
+
+\textbf{Etapes de traitement :}
+\begin{enumerate}[noitemsep]
+  \item Lecture asynchrone du corps JSON via \texttt{readJsonBody}
+  \item Validation des champs obligatoires (\texttt{full\_name}, \texttt{phone\_number})
+  \item Validation du solde initial ($\geq 0$)
+  \item Construction de l'objet compte avec UUID et numero generes
+  \item Si solde > 0 : ajout d'une transaction initiale dans l'historique
+  \item Ajout dans le tableau \texttt{accounts}
+  \item Reponse HTTP 201 avec le resume du compte (sans les transactions)
+\end{enumerate}
+
+\subsection{Fonction 2 --- Lister les comptes (GET /accounts)}
+
+\begin{lstlisting}[style=js, caption={server.js --- GET /accounts}]
+if (pathname === "/accounts" && request.method === "GET") {
+  // accounts.map(accountSummary) : transforme chaque compte
+  // en version "sans transactions" pour alleger la reponse
+  json(response, 200, accounts.map(accountSummary));
+  return;
+}
+\end{lstlisting}
+
+Simple mais efficace : \texttt{Array.map()} applique \texttt{accountSummary} a chaque element du tableau et retourne un nouveau tableau avec uniquement les champs pertinents.
+
+\subsection{Fonction 3 --- Consulter un compte (GET /accounts/\{id\})}
+
+\begin{lstlisting}[style=js, caption={server.js --- GET /accounts/\{account\_id\}}]
+const accountMatch = pathname.match(/^\/accounts\/([^/]+)$/);
+if (accountMatch && request.method === "GET") {
+  const account = findAccount(accountMatch[1]);  // recherche par UUID
+  if (!account) {
+    json(response, 404, { detail: "Compte introuvable." });
+    return;
+  }
+  json(response, 200, accountDetails(account));  // avec transactions
+  return;
+}
+\end{lstlisting}
+
+\texttt{accountMatch[1]} contient l'UUID extrait de l'URL par l'expression reguliere. Si \texttt{findAccount} retourne \texttt{undefined}, on repond HTTP 404.
+
+\subsection{Fonctions 4 et 5 --- Depot et Retrait}
+
+\begin{lstlisting}[style=js, caption={server.js --- POST /accounts/\{id\}/(deposit|withdraw)}]
+const txMatch = pathname.match(
+  /^\/accounts\/([^/]+)\/(deposit|withdraw|transactions)$/
+);
+if (txMatch) {
+  const account = findAccount(txMatch[1]);   // recherche le compte
+  if (!account) {
+    json(response, 404, { detail: "Compte introuvable." });
+    return;
+  }
+
+  const action = txMatch[2];  // "deposit", "withdraw" ou "transactions"
+
+  if ((action === "deposit" || action === "withdraw") && request.method === "POST") {
+    try {
+      const payload = await readJsonBody(request);
+      const amount = round(payload.amount);
+
+      // Validation : montant strictement positif
+      if (!Number.isFinite(amount) || amount <= 0) {
+        json(response, 400, { detail: "Le montant doit etre strictement positif." });
+        return;
+      }
+
+      // Validation specifique au retrait : solde suffisant
+      if (action === "withdraw" && amount > account.balance) {
+        json(response, 400, { detail: "Solde insuffisant pour effectuer ce retrait." });
+        return;
+      }
+
+      // Mise a jour du solde
+      account.balance = action === "deposit"
+        ? round(account.balance + amount)   // depot : on ajoute
+        : round(account.balance - amount);  // retrait : on soustrait
+
+      // Enregistrement de la transaction dans l'historique
+      account.transactions.push({
+        transaction_id: randomUUID(),
+        transaction_type: action,
+        amount,
+        description: payload.description || null,
+        balance_after: account.balance,
+        created_at: new Date().toISOString(),
+      });
+
+      json(response, 200, accountDetails(account));  // compte mis a jour
+    } catch {
+      json(response, 400, { detail: "Corps JSON invalide." });
+    }
+    return;
+  }
+}
+\end{lstlisting}
+
+\begin{infobox}
+\textbf{Modification directe de l'objet en memoire :} Comme \texttt{account} est une reference vers l'objet dans le tableau \texttt{accounts}, modifier \texttt{account.balance} et \texttt{account.transactions} modifie directement la donnee en memoire. Pas besoin de "sauvegarder" explicitement.
+\end{infobox}
+
+% =========================================================
+\section{Cas de test}
+% =========================================================
+
+\subsection{Tableau complet des 23 cas de test}
+
+\begin{longtable}{clp{3.5cm}p{3cm}c}
+\toprule
+\textbf{ID} & \textbf{Fonction} & \textbf{Description} & \textbf{Resultat attendu} & \textbf{Code HTTP} \\
+\midrule
+\endhead
+CT-01 & Creer compte & Tous les champs fournis & Compte cree avec ID et numero & 201 \\
+CT-02 & Creer compte & Sans email ni solde initial & Compte cree, balance = 0 & 201 \\
+CT-03 & Creer compte & \texttt{full\_name} absent & Erreur champ obligatoire & 400 \\
+CT-04 & Creer compte & \texttt{phone\_number} absent & Erreur champ obligatoire & 400 \\
+CT-05 & Creer compte & Solde initial negatif & Erreur solde invalide & 400 \\
+\midrule
+CT-06 & Lister comptes & Aucun compte cree & Tableau vide \texttt{[]} & 200 \\
+CT-07 & Lister comptes & Comptes existants & Liste des comptes & 200 \\
+\midrule
+CT-08 & Consulter compte & ID valide & Details + transactions & 200 \\
+CT-09 & Consulter compte & ID invalide & Compte introuvable & 404 \\
+\midrule
+CT-10 & Depot & Montant valide & Solde augmente & 200 \\
+CT-11 & Depot & Avec description & Libelle visible & 200 \\
+CT-12 & Depot & Montant = 0 & Erreur validation & 400 \\
+CT-13 & Depot & Montant negatif & Erreur validation & 400 \\
+CT-14 & Depot & Compte inexistant & Compte introuvable & 404 \\
+\midrule
+CT-15 & Retrait & Solde suffisant & Solde diminue & 200 \\
+CT-16 & Retrait & Montant = solde & Solde = 0 & 200 \\
+CT-17 & Retrait & Solde insuffisant & Solde insuffisant & 400 \\
+CT-18 & Retrait & Montant = 0 & Erreur validation & 400 \\
+CT-19 & Retrait & Montant negatif & Erreur validation & 400 \\
+CT-20 & Retrait & Compte inexistant & Compte introuvable & 404 \\
+\midrule
+CT-21 & Transactions & Compte sans operation & Tableau vide & 200 \\
+CT-22 & Transactions & Avec operations & Liste chronologique & 200 \\
+CT-23 & Transactions & Compte inexistant & Compte introuvable & 404 \\
+\bottomrule
+\end{longtable}
+
+\subsection{Test manuel detaille --- Scenario complet}
+
+Les tests manuels se font dans \textbf{Swagger UI} a l'adresse \texttt{http://localhost:8003/docs}.
+
+\subsubsection{Etape 1 --- Verifier la liste vide (CT-06)}
+
+\begin{lstlisting}[style=bash, caption={Requete GET /accounts}]
+GET http://localhost:8003/accounts
+\end{lstlisting}
+
+\begin{successbox}
+\textbf{Resultat attendu :} HTTP 200 avec le corps \texttt{[]}\\
+Confirme que le serveur repond et que le tableau est vide au demarrage.
+\end{successbox}
+
+\subsubsection{Etape 2 --- Creer un compte (CT-01)}
+
+Dans Swagger, ouvrir \textbf{POST /accounts}, cliquer \textbf{Try it out}, selectionner l'exemple \textbf{CT-01} dans le menu deroulant \textit{Examples}.
+
+\begin{lstlisting}[style=json, caption={Corps de la requete}]
+{
+  "full_name": "AMAYEN BOUSSIOM THIERRY MARTIN",
+  "phone_number": "699001122",
+  "email": "thierry@example.com",
+  "initial_balance": 10000
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=json, caption={Reponse attendue --- HTTP 201}]
+{
+  "id": "a3f1b2c4-d5e6-7890-abcd-ef1234567890",
+  "account_number": "ACC-20260422-A1B2C3D4",
+  "full_name": "AMAYEN BOUSSIOM THIERRY MARTIN",
+  "phone_number": "699001122",
+  "email": "thierry@example.com",
+  "balance": 10000,
+  "created_at": "2026-04-22T10:00:00.000Z"
+}
+\end{lstlisting}
+
+\begin{infobox}
+\textbf{A noter :} Copier l'\texttt{id} retourne pour les etapes suivantes.
+\end{infobox}
+
+\subsubsection{Etape 3 --- Tester les cas d'erreur (CT-03, CT-04, CT-05)}
+
+Selectionner l'exemple \textbf{CT-05} dans le menu Examples :
+\begin{lstlisting}[style=json, caption={Test CT-05 : solde negatif}]
+{
+  "full_name": "TEST NEGATIF",
+  "phone_number": "600000001",
+  "initial_balance": -500
+}
+\end{lstlisting}
+
+\begin{dangerbox}
+\textbf{Resultat attendu :} HTTP 400\\
+Corps : \texttt{\{"detail": "Le solde initial doit etre positif ou nul."\}}
+\end{dangerbox}
+
+\subsubsection{Etape 4 --- Effectuer un depot (CT-10)}
+
+\begin{lstlisting}[style=bash, caption={Requete POST /accounts/\{id\}/deposit}]
+POST http://localhost:8003/accounts/a3f1b2c4-.../deposit
+\end{lstlisting}
+
+Selectionner l'exemple \textbf{CT-10} :
+\begin{lstlisting}[style=json, caption={Corps}]
+{ "amount": 5000 }
+\end{lstlisting}
+
+\begin{successbox}
+\textbf{Resultat attendu :} HTTP 200, balance = 15000 (10000 + 5000).\\
+2 transactions visibles : solde initial + depot.
+\end{successbox}
+
+\subsubsection{Etape 5 --- Effectuer un retrait valide (CT-15)}
+
+Selectionner l'exemple \textbf{CT-15} :
+\begin{lstlisting}[style=json, caption={Corps}]
+{ "amount": 2000, "description": "Retrait client" }
+\end{lstlisting}
+
+\begin{successbox}
+\textbf{Resultat attendu :} HTTP 200, balance = 13000 (15000 - 2000).
+\end{successbox}
+
+\subsubsection{Etape 6 --- Tester le solde insuffisant (CT-17)}
+
+Selectionner l'exemple \textbf{CT-17} :
+\begin{lstlisting}[style=json, caption={Corps}]
+{ "amount": 50000, "description": "Test solde insuffisant" }
+\end{lstlisting}
+
+\begin{dangerbox}
+\textbf{Resultat attendu :} HTTP 400\\
+Corps : \texttt{\{"detail": "Solde insuffisant pour effectuer ce retrait."\}}
+\end{dangerbox}
+
+\subsubsection{Etape 7 --- Consulter l'historique (CT-22)}
+
+\begin{lstlisting}[style=bash, caption={Requete GET /accounts/\{id\}/transactions}]
+GET http://localhost:8003/accounts/a3f1b2c4-.../transactions
+\end{lstlisting}
+
+\begin{successbox}
+\textbf{Resultat attendu :} HTTP 200 avec 3 transactions dans l'ordre chronologique :\\
+1. Depot initial (10 000) --- balance 10 000\\
+2. Depot (5 000) --- balance 15 000\\
+3. Retrait (2 000) --- balance 13 000
+\end{successbox}
+
+\subsubsection{Etape 8 --- Tester un ID inexistant (CT-09)}
+
+\begin{lstlisting}[style=bash, caption={Test CT-09}]
+GET http://localhost:8003/accounts/00000000-0000-0000-0000-000000000000
+\end{lstlisting}
+
+\begin{dangerbox}
+\textbf{Resultat attendu :} HTTP 404\\
+Corps : \texttt{\{"detail": "Compte introuvable."\}}
+\end{dangerbox}
+
+% =========================================================
+\section{Documentation Swagger}
+% =========================================================
+
+\subsection{Fonctionnement}
+
+L'interface Swagger UI est accessible a \texttt{http://localhost:8003/docs}. Elle est servie par \texttt{server.js} depuis le dossier \texttt{public/swagger-ui/} et se nourrit du fichier \texttt{openapi.json} pour afficher la documentation interactive.
+
+\begin{lstlisting}[style=js, caption={server.js --- Generation de la page Swagger}]
+function docsHtml() {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/public/swagger-ui/swagger-ui.css">
+  <title>API JavaScript - Swagger UI</title>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="/public/swagger-ui/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: '/openapi.json',          // charge le fichier de spec
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      docExpansion: 'list',
+      displayRequestDuration: true,  // affiche le temps de reponse
+      filter: true,
+    });
+  </script>
+</body>
+</html>`;
+}
+\end{lstlisting}
+
+\subsection{Exemples interactifs dans Swagger}
+
+Le fichier \texttt{openapi.json} contient des exemples nommes pour chaque endpoint :
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Endpoint} & \textbf{Exemples disponibles dans Swagger} \\
+\midrule
+\texttt{POST /accounts} & CT-01, CT-02, CT-03, CT-04, CT-05 \\
+\texttt{POST /\{id\}/deposit} & CT-10, CT-11, CT-12, CT-13 \\
+\texttt{POST /\{id\}/withdraw} & CT-15, CT-16, CT-17, CT-18, CT-19 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Comment utiliser Swagger pour les tests manuels}
+
+\begin{enumerate}
+  \item Lancer le serveur : \texttt{node server.js}
+  \item Ouvrir \texttt{http://localhost:8003/docs} dans le navigateur
+  \item Cliquer sur un endpoint (ex : \textit{POST /accounts})
+  \item Cliquer sur \textbf{Try it out}
+  \item Selectionner un cas de test dans le menu deroulant \textbf{Examples}
+  \item Cliquer sur \textbf{Execute}
+  \item Verifier le code HTTP et le corps de la reponse
+\end{enumerate}
+
+% =========================================================
+\section{Lancement et deploiement}
+% =========================================================
+
+\subsection{Lancement en local}
+
+\begin{lstlisting}[style=bash, caption={Lancement du serveur}]
+# Lancer le serveur sur le port par defaut (8003)
+node server.js
+
+# Ou sur un port personnalise
+node server.js 4000
+
+# L'API est disponible sur :
+#   http://localhost:8003/        (point d'entree)
+#   http://localhost:8003/docs    (Swagger UI)
+\end{lstlisting}
+
+\subsection{package.json}
+
+\begin{lstlisting}[style=json, caption={package.json}]
+{
+  "name": "api-bancaire-javascript",
+  "version": "1.0.0",
+  "description": "API REST bancaire en JavaScript pur",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
+\end{lstlisting}
+
+Aucune dependance NPM : \texttt{npm install} n'est pas necessaire.
+
+% =========================================================
+\section{Conclusion}
+% =========================================================
+
+Ce projet implemente une \textbf{API REST complete en JavaScript pur} pour la gestion de comptes bancaires, sans aucune dependance externe, respectant toutes les exigences fonctionnelles et non fonctionnelles du cahier des charges.
+
+\subsection*{Points cles de l'implementation}
+
+\begin{itemize}[noitemsep]
+  \item \textbf{JavaScript pur :} module \texttt{http} natif, aucune dependance NPM externe
+  \item \textbf{Routage par regex :} expressions regulieres pour extraire les parametres d'URL
+  \item \textbf{Asynchronisme :} \texttt{async/await} et Promises pour la lecture du corps HTTP
+  \item \textbf{Validation manuelle :} toutes les regles de gestion implementees explicitement
+  \item \textbf{Documentation interactive :} 23 cas de test executables dans Swagger UI
+  \item \textbf{Codes HTTP corrects :} 201 (creation), 200 (succes), 400 (erreur metier), 404 (non trouve)
+\end{itemize}
+
+\subsection*{Limites actuelles}
+
+\begin{itemize}[noitemsep]
+  \item Pas de persistance : donnees perdues a l'arret du serveur
+  \item Pas d'authentification
+  \item Pas de virement entre comptes
+  \item Pas de separation des roles client/administrateur
+\end{itemize}
+
+Ces elements representent des evolutions naturelles pour une version future.
+
+\vfill
+\begin{center}
+\rule{0.5\linewidth}{0.5pt}\\[0.3cm]
+{\small AMAYEN BOUSSIOM THIERRY MARTIN --- Matricule 25I2177 --- Licence 3 ICT\\
+Universite de Yaounde I --- Avril 2026}
+\end{center}
+
+\end{document}
