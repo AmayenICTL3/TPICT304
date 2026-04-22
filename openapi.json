@@ -409,6 +409,103 @@
         }
       }
     },
+    "/accounts/{account_id}/transfer": {
+      "post": {
+        "tags": ["Transactions"],
+        "summary": "Effectuer un virement",
+        "description": "Transfère un montant du compte source vers un compte destinataire. Les deux soldes sont mis à jour simultanément.\n\n**Cas de test :**\n\n| # | Cas | Résultat attendu |\n|---|-----|------------------|\n| CT-24 | Virement valide | HTTP 200 — les deux comptes mis à jour |\n| CT-25 | Avec description | HTTP 200 — motif visible dans les deux historiques |\n| CT-26 | Solde insuffisant | HTTP 400 — Solde insuffisant |\n| CT-27 | Vers soi-même | HTTP 400 — comptes identiques |\n| CT-28 | Compte source inexistant | HTTP 404 |\n| CT-29 | Compte destinataire inexistant | HTTP 404 |",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Identifiant UUID du compte source",
+            "example": "a3f1b2c4-d5e6-7890-abcd-ef1234567890"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TransferRequest" },
+              "examples": {
+                "CT-24 — Virement valide": {
+                  "summary": "CT-24 : Virement valide (cas nominal)",
+                  "description": "Précondition : solde source >= 3000. Résultat : HTTP 200, les deux comptes mis à jour.",
+                  "value": {
+                    "to_account_id": "COLLER-ICI-L-ID-DU-COMPTE-DESTINATAIRE",
+                    "amount": 3000
+                  }
+                },
+                "CT-25 — Virement avec description": {
+                  "summary": "CT-25 : Virement avec motif (cas nominal)",
+                  "description": "La description apparait dans les deux historiques.",
+                  "value": {
+                    "to_account_id": "COLLER-ICI-L-ID-DU-COMPTE-DESTINATAIRE",
+                    "amount": 1000,
+                    "description": "Remboursement loyer"
+                  }
+                },
+                "CT-26 — Solde insuffisant": {
+                  "summary": "CT-26 : Solde insuffisant → 400",
+                  "description": "Résultat attendu : HTTP 400.",
+                  "value": {
+                    "to_account_id": "COLLER-ICI-L-ID-DU-COMPTE-DESTINATAIRE",
+                    "amount": 50000
+                  }
+                },
+                "CT-27 — Virement vers soi-même": {
+                  "summary": "CT-27 : Même compte → 400",
+                  "description": "Résultat attendu : HTTP 400.",
+                  "value": {
+                    "to_account_id": "MEME-ID-QUE-LE-COMPTE-SOURCE",
+                    "amount": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Virement effectué, les deux comptes mis à jour",
+            "content": {
+              "application/json": {
+                "example": {
+                  "from_account": {
+                    "id": "a3f1b2c4-...",
+                    "balance": 7000,
+                    "transactions": [{ "transaction_type": "transfer_out", "amount": 3000, "balance_after": 7000 }]
+                  },
+                  "to_account": {
+                    "id": "b5c6d7e8-...",
+                    "balance": 8000,
+                    "transactions": [{ "transaction_type": "transfer_in", "amount": 3000, "balance_after": 8000 }]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solde insuffisant, montant invalide ou virement vers soi-même",
+            "content": {
+              "application/json": {
+                "example": { "detail": "Solde insuffisant pour effectuer ce virement." }
+              }
+            }
+          },
+          "404": {
+            "description": "Compte source ou destinataire introuvable",
+            "content": {
+              "application/json": {
+                "example": { "detail": "Compte destinataire introuvable." }
+              }
+            }
+          }
+        }
+      }
+    },
     "/accounts/{account_id}/transactions": {
       "get": {
         "tags": ["Transactions"],
@@ -520,11 +617,33 @@
           "created_at": { "type": "string", "description": "Date de creation au format ISO 8601." }
         }
       },
+      "TransferRequest": {
+        "type": "object",
+        "required": ["to_account_id", "amount"],
+        "properties": {
+          "to_account_id": {
+            "type": "string",
+            "description": "Identifiant UUID du compte destinataire.",
+            "example": "b5c6d7e8-f9a0-1234-bcde-567890abcdef"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Montant à virer. Doit être strictement positif.",
+            "example": 3000
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Motif du virement.",
+            "example": "Remboursement loyer"
+          }
+        }
+      },
       "TransactionRecord": {
         "type": "object",
         "properties": {
           "transaction_id": { "type": "string", "description": "Identifiant unique de la transaction." },
-          "transaction_type": { "type": "string", "enum": ["deposit", "withdraw"], "description": "Type de transaction." },
+          "transaction_type": { "type": "string", "enum": ["deposit", "withdraw", "transfer_in", "transfer_out"], "description": "Type de transaction." },
           "amount": { "type": "number", "description": "Montant de la transaction." },
           "description": { "type": "string", "nullable": true, "description": "Description de la transaction." },
           "balance_after": { "type": "number", "description": "Solde apres l'operation." },

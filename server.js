@@ -211,7 +211,7 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  const txMatch = pathname.match(/^\/accounts\/([^/]+)\/(deposit|withdraw|transactions)$/);
+  const txMatch = pathname.match(/^\/accounts\/([^/]+)\/(deposit|withdraw|transfer|transactions)$/);
   if (txMatch) {
     const account = findAccount(txMatch[1]);
     if (!account) {
@@ -223,6 +223,72 @@ const server = http.createServer(async (request, response) => {
 
     if (action === "transactions" && request.method === "GET") {
       json(response, 200, account.transactions);
+      return;
+    }
+
+    if (action === "transfer" && request.method === "POST") {
+      try {
+        const payload = await readJsonBody(request);
+
+        if (!payload.to_account_id) {
+          json(response, 400, { detail: "to_account_id est obligatoire." });
+          return;
+        }
+
+        if (account.id === payload.to_account_id) {
+          json(response, 400, { detail: "Le compte source et le compte destinataire doivent etre differents." });
+          return;
+        }
+
+        const toAccount = findAccount(payload.to_account_id);
+        if (!toAccount) {
+          json(response, 404, { detail: "Compte destinataire introuvable." });
+          return;
+        }
+
+        const amount = round(payload.amount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          json(response, 400, { detail: "Le montant doit etre strictement positif." });
+          return;
+        }
+
+        if (amount > account.balance) {
+          json(response, 400, { detail: "Solde insuffisant pour effectuer ce virement." });
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const transferId = randomUUID();
+
+        account.balance = round(account.balance - amount);
+        account.transactions.push({
+          transaction_id: randomUUID(),
+          transaction_type: "transfer_out",
+          amount,
+          description: payload.description || `Virement vers ${toAccount.account_number}`,
+          balance_after: account.balance,
+          created_at: now,
+          transfer_id: transferId,
+        });
+
+        toAccount.balance = round(toAccount.balance + amount);
+        toAccount.transactions.push({
+          transaction_id: randomUUID(),
+          transaction_type: "transfer_in",
+          amount,
+          description: payload.description || `Virement de ${account.account_number}`,
+          balance_after: toAccount.balance,
+          created_at: now,
+          transfer_id: transferId,
+        });
+
+        json(response, 200, {
+          from_account: accountDetails(account),
+          to_account: accountDetails(toAccount),
+        });
+      } catch {
+        json(response, 400, { detail: "Corps JSON invalide." });
+      }
       return;
     }
 
