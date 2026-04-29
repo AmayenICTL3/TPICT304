@@ -1,0 +1,25 @@
+digraph deposit {
+  rankdir=TB;
+  node [fontname="Helvetica", fontsize=10, shape=box, style="rounded,filled", fillcolor="#EAF4FF", color="#1F5A99"];
+  edge [fontname="Helvetica", fontsize=9, color="#444444"];
+
+  start [label="Début", shape=ellipse, fillcolor="#D5F5E3", color="#1E8449"];
+  n1 [label="Chercher le compte"];
+  d1 [label="Compte trouvé ?", shape=diamond, fillcolor="#FFF3CD", color="#B9770E"];
+  n2 [label="Lire le corps JSON"];
+  d2 [label="Montant > 0 et valide ?", shape=diamond, fillcolor="#FFF3CD", color="#B9770E"];
+  n3 [label="Augmenter balance"];
+  n4 [label="Ajouter transaction deposit"];
+  ok [label="Retour HTTP 200", shape=ellipse, fillcolor="#D5F5E3", color="#1E8449"];
+  ko404 [label="Retour HTTP 404", shape=ellipse, fillcolor="#FADBD8", color="#C0392B"];
+  ko400a [label="Retour HTTP 400\n(montant invalide)", shape=ellipse, fillcolor="#FADBD8", color="#C0392B"];
+  ko400b [label="Retour HTTP 400\n(JSON invalide)", shape=ellipse, fillcolor="#FADBD8", color="#C0392B"];
+
+  start -> n1 -> d1;
+  d1 -> ko404 [label="Non"];
+  d1 -> n2 [label="Oui"];
+  n2 -> d2;
+  d2 -> ko400a [label="Non"];
+  d2 -> n3 [label="Oui"];
+  n3 -> n4 -> ok;
+}

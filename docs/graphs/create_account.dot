@@ -1,0 +1,28 @@
+digraph create_account {
+  rankdir=TB;
+  node [fontname="Helvetica", fontsize=10, shape=box, style="rounded,filled", fillcolor="#EAF4FF", color="#1F5A99"];
+  edge [fontname="Helvetica", fontsize=9, color="#444444"];
+
+  start [label="Début", shape=ellipse, fillcolor="#D5F5E3", color="#1E8449"];
+  n1 [label="Lire le corps JSON"];
+  d1 [label="full_name et phone_number présents ?", shape=diamond, fillcolor="#FFF3CD", color="#B9770E"];
+  d2 [label="initial_balance < 0 ?", shape=diamond, fillcolor="#FFF3CD", color="#B9770E"];
+  n2 [label="Construire l'objet compte"];
+  d3 [label="initial_balance > 0 ?", shape=diamond, fillcolor="#FFF3CD", color="#B9770E"];
+  n3 [label="Ajouter transaction\n'Solde initial'"];
+  n4 [label="Ajouter le compte\nen mémoire"];
+  ok [label="Retour HTTP 201", shape=ellipse, fillcolor="#D5F5E3", color="#1E8449"];
+  ko400a [label="Retour HTTP 400\n(champs obligatoires)", shape=ellipse, fillcolor="#FADBD8", color="#C0392B"];
+  ko400b [label="Retour HTTP 400\n(solde négatif)", shape=ellipse, fillcolor="#FADBD8", color="#C0392B"];
+  ko400c [label="Retour HTTP 400\n(JSON invalide)", shape=ellipse, fillcolor="#FADBD8", color="#C0392B"];
+
+  start -> n1 -> d1;
+  d1 -> ko400a [label="Non"];
+  d1 -> d2 [label="Oui"];
+  d2 -> ko400b [label="Oui"];
+  d2 -> n2 [label="Non"];
+  n2 -> d3;
+  d3 -> n3 [label="Oui"];
+  d3 -> n4 [label="Non"];
+  n3 -> n4 -> ok;
+}
