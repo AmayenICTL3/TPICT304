@@ -86,6 +86,10 @@ function findAccount(accountId) {
   return accounts.find((account) => account.id === accountId);
 }
 
+function resetAccounts() {
+  accounts.splice(0, accounts.length);
+}
+
 function docsHtml() {
   return `<!DOCTYPE html>
 <html>
@@ -113,7 +117,8 @@ function docsHtml() {
 </html>`;
 }
 
-const server = http.createServer(async (request, response) => {
+function createServer() {
+  return http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${HOST}:${PORT}`);
   const pathname = url.pathname;
 
@@ -329,9 +334,24 @@ const server = http.createServer(async (request, response) => {
   }
 
   json(response, 404, { detail: "Route introuvable." });
-});
+  });
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(`API JavaScript disponible sur http://${HOST}:${PORT}`);
-  console.log(`Swagger local : http://${HOST}:${PORT}/docs`);
-});
+if (require.main === module) {
+  const server = createServer();
+  server.listen(PORT, HOST, () => {
+    console.log(`API JavaScript disponible sur http://${HOST}:${PORT}`);
+    console.log(`Swagger local : http://${HOST}:${PORT}/docs`);
+  });
+}
+
+module.exports = {
+  round,
+  generateAccountNumber,
+  accountSummary,
+  accountDetails,
+  findAccount,
+  resetAccounts,
+  createServer,
+  accounts,
+};
