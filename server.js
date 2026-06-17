@@ -123,6 +123,11 @@ function createServer() {
   const pathname = url.pathname;
 
   if (request.method === "GET" && pathname === "/") {
+    sendFile(response, path.join(__dirname, "public", "index.html"), "text/html; charset=utf-8");
+    return;
+  }
+
+  if (request.method === "GET" && pathname === "/api-info") {
     json(response, 200, {
       message: "Bienvenue sur l'API bancaire JavaScript",
       documentation: "/docs",
@@ -150,6 +155,8 @@ function createServer() {
       ".js": "text/javascript; charset=utf-8",
       ".css": "text/css; charset=utf-8",
       ".svg": "image/svg+xml",
+      ".html": "text/html; charset=utf-8",
+      ".png": "image/png",
     };
     sendFile(response, filePath, contentTypeMap[ext] || "application/octet-stream");
     return;
