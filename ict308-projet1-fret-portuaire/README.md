@@ -11,19 +11,12 @@ Application Java Swing pour le suivi des conteneurs du Port Autonome de Douala.
 - interface Swing avec `JTable`
 - filtrage des conteneurs refrigeres en alerte
 - thread de simulation qui modifie les temperatures toutes les 3 secondes
-- tests metier simples avec assertions Java
 
 ## Compiler
 
 ```bash
 cd ict308-projet1-fret-portuaire
 make compile
-```
-
-## Lancer les tests
-
-```bash
-make test
 ```
 
 ## Lancer l'application
@@ -43,4 +36,3 @@ make clean
 - `src/main/java/.../model` : classes metier
 - `src/main/java/.../service` : gestion du stock, persistance, simulation
 - `src/main/java/.../ui` : interface Swing
-- `src/test/java/...` : tests sans dependance externe
